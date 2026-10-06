@@ -45,7 +45,7 @@ section.view.on{display:block}
 /* tabs */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
-nav.tabs button{flex:1;background:none;border:0;padding:10px 0 12px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.tabs button{flex:1;background:none;border:0;padding:10px 0 12px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
 nav.tabs button[aria-current="page"]{color:var(--ink);font-weight:600}
 nav.tabs svg{width:22px;height:22px}
 
@@ -148,6 +148,36 @@ nav.tabs svg{width:22px;height:22px}
 .bcsrow .app.bad{color:var(--danger)}
 .bcsrow .app.good{color:var(--ok)}
 
+/* trips */
+.spend{display:flex;justify-content:space-between;align-items:baseline;margin:2px 2px 8px}
+.spend h2{margin:0;font-family:var(--num);font-size:34px;font-weight:700}
+.spend .lab{color:var(--muted);font-size:14px}
+.tripbars{display:flex;align-items:flex-end;gap:8px;height:150px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 10px 8px;margin-bottom:12px}
+.tripbars button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;background:none;border:0;gap:4px;padding:0}
+.tripbars .b{width:100%;max-width:46px;border-radius:4px 4px 0 0;background:var(--line);min-height:2px}
+.tripbars button[aria-pressed="true"] .b{background:var(--ink)}
+.tripbars .v{font-family:var(--num);font-size:13px;color:var(--muted)}
+.tripbars button[aria-pressed="true"] .v{color:var(--ink);font-weight:600}
+.tripbars .y{font-family:var(--num);font-size:15px}
+.trip{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px}
+.trip .nm{font-weight:600;font-size:17px}
+.trip .tt{font-family:var(--num);font-size:20px;font-weight:700;text-align:right}
+.trip .meta{font-size:14px;color:var(--muted)}
+.trip .flag{grid-column:1/-1;font-size:13px;color:var(--danger)}
+.tf label{display:block;font-size:13px;color:var(--muted);margin:10px 0 0}
+.tf input{display:block;width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);font-size:16px}
+.tf .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow{display:grid;grid-template-columns:1fr 1fr 34px;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.frow input{padding:8px 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);font-size:15px;width:100%;min-width:0}
+.frow .x{grid-row:1/3;grid-column:3;background:none;border:0;color:var(--danger);font-size:20px}
+.crow{display:grid;grid-template-columns:1fr 110px 34px;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+.crow input{padding:8px 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);font-size:15px;width:100%;min-width:0}
+.crow .x{background:none;border:0;color:var(--danger);font-size:20px}
+.addrow{margin-top:8px;padding:8px 12px;font-size:15px}
+.tripsum{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;font-weight:600}
+.tripsum .num{font-size:24px}
+.day.intrip::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--ink);z-index:2}
+
 /* settings */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin-bottom:12px}
 .card h2{margin:0 0 8px;font-size:17px}
@@ -184,6 +214,9 @@ nav.tabs svg{width:22px;height:22px}
       <div><div class="lab">Next leave</div><div class="val" id="nextleave">–</div><div class="lab" id="nextleave2"></div></div>
       <div><div class="lab">Weeks left in <span id="yr1"></span></div><div class="val" id="weeksleft">–</div></div>
     </div>
+    <div class="strip" id="flightstrip" hidden>
+      <div><div class="lab">Next flight</div><div class="val" id="nextflight"></div><div class="lab" id="nextflight2"></div></div>
+    </div>
     <button class="btn primary block" data-act="bcs">Check against BCS</button>
   </section>
 
@@ -205,6 +238,7 @@ nav.tabs svg{width:22px;height:22px}
       <span><i style="background:var(--tvt)"></i>TVT</span>
       <span><i style="background:var(--holiday)"></i>Holiday</span>
       <span><i style="background:var(--weekend)"></i>Weekend</span>
+      <span><i style="background:var(--ink);height:4px"></i>Trip</span>
     </div>
   </section>
 
@@ -216,6 +250,13 @@ nav.tabs svg{width:22px;height:22px}
     </div>
     <div class="ystats" id="ystats"></div>
     <div class="weeks" id="weeks"></div>
+  </section>
+
+  <section class="view" id="v-trips">
+    <div class="spend"><div><div class="lab" id="spendlab"></div><h2 id="spendval"></h2></div><div class="lab" id="spendall"></div></div>
+    <div class="tripbars" id="tripbars"></div>
+    <div id="triplist"></div>
+    <button class="btn primary block" data-act="addtrip">Add trip</button>
   </section>
 
   <section class="view" id="v-settings">
@@ -247,6 +288,7 @@ nav.tabs svg{width:22px;height:22px}
   <button data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="13" width="4" height="7"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>Balance</button>
   <button data-tab="month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Month</button>
   <button data-tab="year"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 9h16M4 13h16M4 17h16M4 21h16"/></svg>Year</button>
+  <button data-tab="trips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2 14l20-8-6 14-3-6-6-1z"/><path d="M13 14l3-3"/></svg>Trips</button>
   <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
 </nav>
 
@@ -298,7 +340,7 @@ function parseHM(s){s=String(s).trim().replace(',','.');if(!s)return null;
 
 /* ---------- state ---------- */
 let S=load();
-function blank(){return{schemaVersion:1,settings:{minutesPerDay:MDAY,employmentStart:'2023-02-01',defaultAllowanceMinutes:{verlof:216*60,adv:104*60}},years:{},bcsChecks:[],entries:[]}}
+function blank(){return{schemaVersion:2,trips:[],settings:{minutesPerDay:MDAY,employmentStart:'2023-02-01',defaultAllowanceMinutes:{verlof:216*60,adv:104*60}},years:{},bcsChecks:[],entries:[]}}
 function load(){try{const r=localStorage.getItem(KEY);return r?normalize(JSON.parse(r)):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this phone')}}
 function uid(){return Math.random().toString(36).slice(2,10)}
@@ -311,6 +353,10 @@ function normalize(d){
   const tot=totals(out.entries);
   out.bcsChecks=(d.bcsChecks||[]).map(c=>({date:c.date,savedAt:c.savedAt||c.date+'T12:00:00',minutes:{verlof:0,adv:0,tvt:0,...c.minutes},bookedAtCheck:c.bookedAtCheck||{...tot},note:c.note||''}));
   out.years=d.years||{};
+  const num=v=>v===''||v==null?null:(+String(v).replace(',','.')||0);
+  out.trips=(d.trips||[]).map(t=>({id:t.id||uid(),name:t.name||'Trip',start:t.start,end:t.end||t.start,note:t.note||'',flag:t.flag||'',
+    flights:(t.flights||[]).map(f=>({date:f.date||t.start,time:f.time||'',route:f.route||'',airline:f.airline||'',cost:num(f.cost)})),
+    costs:(t.costs||[]).map(c=>({label:c.label||'',amount:num(c.amount)}))})).filter(t=>/^\d{4}-\d\d-\d\d$/.test(t.start||''));
   return out;
 }
 function allowance(y,t){const yr=S.years[y];if(yr&&yr.allowanceMinutes&&yr.allowanceMinutes[t]!=null)return yr.allowanceMinutes[t];return S.settings.defaultAllowanceMinutes[t]||0}
@@ -346,6 +392,7 @@ function render(){
   if(tab==='month')renderMonth();
   if(tab==='year')renderYear();
   if(tab==='settings')renderSettings();
+  if(tab==='trips')renderTrips();
 }
 
 /* ---------- home ---------- */
@@ -371,6 +418,11 @@ function renderHome(){
     $('#nextleave').textContent=inDays===1?'Tomorrow':`In ${inDays} days`;
     $('#nextleave2').textContent=`${fmtDate(first)}, ${days(n*MDAY)}`;
   }else{$('#nextleave').textContent='None planned';$('#nextleave2').textContent=''}
+  const fl=S.trips.flatMap(t=>t.flights.map(f=>({...f,trip:t.name}))).filter(f=>f.date>=today).sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1);
+  $('#flightstrip').hidden=!fl.length;
+  if(fl.length){const f=fl[0];const n=Math.round((parse(f.date)-parse(today))/864e5);
+    $('#nextflight').textContent=n===0?'Today':n===1?'Tomorrow':`In ${n} days`;
+    $('#nextflight2').textContent=[fmtDate(f.date),f.time,f.route,f.trip].filter(Boolean).join(', ')}
   $('#yr1').textContent=y;$('#weeksleft').textContent=Math.max(isoWeeksInYear(y)-isoWeek(new Date()),0);
 }
 function fmtDate(s){const d=parse(s);return `${DSHORT[dow(d)]} ${d.getDate()} ${MSHORT[d.getMonth()]}${d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():''}`}
@@ -401,6 +453,7 @@ function renderMonth(){
         lab=es.map(e=>TYPES[e.type].name[0]+hm(e.minutes).replace(':00','')).join(' ')}
     }
     if(rangeStart===s)cls.push('sel');
+    if(tripOn(s))cls.push('intrip');
     h+=`<button class="${cls.join(' ')}" data-day="${s}" ${inM?'':'tabindex="-1" aria-hidden="true"'} aria-label="${fmtDate(s)}${es.length?', '+es.map(e=>TYPES[e.type].name+' '+hm(e.minutes)).join(', '):''}${holidayName(s)?', '+holidayName(s):''}">${fill}<span class="d">${d.getDate()}</span><span class="t">${esc(lab)}</span></button>`;
     d=addDays(d,1);
     if(d>last&&dow(d)===0)break;
@@ -442,8 +495,8 @@ function renderYear(){
 }
 
 /* ---------- sheets ---------- */
-function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('on');$('#scrim').classList.add('on');const f=$('#sheet').querySelector('button,input');f&&f.focus({preventScroll:true})}
-function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on')}
+function openSheet(html,keep){const sh=$('#sheet');const st=sh.scrollTop;sh.innerHTML=html;sh.classList.add('on');$('#scrim').classList.add('on');if(keep){sh.scrollTop=st;return}const f=sh.querySelector('button,input');f&&f.focus({preventScroll:true})}
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');td=null}
 let draft={};
 function typeChips(sel){return TKEYS.map(t=>`<button class="chip" style="--c:${TYPES[t].c}" data-type="${t}" aria-pressed="${sel===t}"><i></i>${TYPES[t].name}</button>`).join('')}
 function amountChips(sel){return [[MDAY,'Full day 8:00'],[MDAY/2,'Half day 4:00']].map(([m,l])=>`<button class="chip" data-amt="${m}" aria-pressed="${sel===m}">${l}</button>`).join('')+`<input class="hm" id="amtCustom" inputmode="decimal" placeholder="h:mm" aria-label="Other amount" value="${sel!==MDAY&&sel!==MDAY/2&&sel?hm(sel):''}">`}
@@ -451,7 +504,7 @@ function openDay(s){
   const es=entriesOn(s);const used=es.reduce((x,e)=>x+e.minutes,0);
   draft={mode:'day',date:s,type:es.length?null:'verlof',amt:Math.min(MDAY-used,MDAY)||MDAY/2};
   if(es.length&&used<MDAY)draft.type=TKEYS.find(t=>!es.some(e=>e.type===t));
-  openSheet(`<h3>${fmtDate(s)}</h3><div class="sub">Week ${isoWeek(parse(s))}${holidayName(s)?', '+holidayName(s):''}</div>
+  openSheet(`<h3>${fmtDate(s)}</h3><div class="sub">Week ${isoWeek(parse(s))}${holidayName(s)?', '+holidayName(s):''}${tripOn(s)?', trip: '+esc(tripOn(s).name):''}</div>
     ${es.map(e=>`<div class="existing"><span class="n" style="--c:${TYPES[e.type].c}"><i></i>${TYPES[e.type].name} ${hm(e.minutes)}</span><button data-del="${e.id}">Remove</button></div>`).join('')}
     ${used<MDAY?`<div class="lbl">${es.length?'Add the rest of the day':'Mark this day as'}</div><div class="chips" id="tchips">${typeChips(draft.type)}</div>
     <div class="lbl">Hours</div><div class="chips" id="achips">${amountChips(draft.amt)}</div>
@@ -479,6 +532,62 @@ function openBCS(){
     $('#bcsmsg').textContent=!b?'':diffs?'A red value means BCS and the app disagree. Look for a day missing in one of them, or save to accept BCS as correct.':'Everything matches BCS.'};
   TKEYS.forEach(t=>$('#bcs-'+t).addEventListener('input',upd));upd();
 }
+
+/* ---------- trips ---------- */
+const eur=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n||0);
+const money=v=>{if(v==null||String(v).trim()==='')return null;const n=Number(String(v).replace(/[€\s]/g,'').replace(',','.'));return isNaN(n)?NaN:n};
+const tripTotal=t=>t.flights.reduce((x,f)=>x+(+f.cost||0),0)+t.costs.reduce((x,c)=>x+(+c.amount||0),0);
+const tripOn=s=>S.trips.find(t=>s>=t.start&&s<=t.end);
+const leaveIn=t=>S.entries.filter(e=>e.date>=t.start&&e.date<=t.end).reduce((x,e)=>x+e.minutes,0);
+let tYear=new Date().getFullYear();
+function renderTrips(){
+  const cy=new Date().getFullYear();
+  const ys=S.trips.map(t=>+t.start.slice(0,4));const y0=Math.min(2023,...ys),y1=Math.max(cy,...ys);
+  const tot={};for(let y=y0;y<=y1;y++)tot[y]=0;S.trips.forEach(t=>tot[+t.start.slice(0,4)]+=tripTotal(t));
+  const max=Math.max(1,...Object.values(tot));
+  $('#tripbars').innerHTML=Object.keys(tot).map(y=>`<button data-tyear="${y}" aria-pressed="${+y===tYear}" aria-label="${y}: ${eur(tot[y])}"><span class="v">${Math.round(tot[y])}</span><span class="b" style="height:${tot[y]/max*100}%"></span><span class="y">${y}</span></button>`).join('');
+  $('#spendlab').textContent=`Travel spend ${tYear}`;$('#spendval').textContent=eur(tot[tYear]||0);
+  $('#spendall').textContent=`All years ${eur(Object.values(tot).reduce((a,b)=>a+b,0))}`;
+  const list=S.trips.filter(t=>+t.start.slice(0,4)===tYear).sort((a,b)=>a.start<b.start?-1:1);
+  $('#triplist').innerHTML=list.length?list.map(t=>{const lv=leaveIn(t);const nd=Math.round((parse(t.end)-parse(t.start))/864e5);
+    return `<button class="trip" data-trip="${t.id}"><span class="nm">${esc(t.name)}</span><span class="tt">${eur(tripTotal(t))}</span>
+      <span class="meta">${fmtDate(t.start)} – ${fmtDate(t.end)}, ${nd} nights${lv?', '+days(lv)+' leave':''}</span><span class="meta" style="text-align:right">${t.flights.length} ${t.flights.length===1?'flight':'flights'}</span>
+      ${t.flag?`<span class="flag">${esc(t.flag)}</span>`:''}</button>`}).join(''):`<div class="note">No trips in ${tYear}. Add one with the button below.</div>`;
+}
+let td=null;
+function openTrip(id){
+  const t=id?S.trips.find(x=>x.id===id):null;
+  td=t?JSON.parse(JSON.stringify(t)):{id:uid(),name:'',start:todayStr(),end:todayStr(),flights:[],costs:[],note:'',flag:'',isNew:true};
+  drawTrip(true);
+}
+function drawTrip(focus){
+  const f=td;
+  openSheet(`<h3>${f.isNew?'New trip':esc(f.name||'Trip')}</h3>
+   ${f.flag?`<div class="sub" style="color:var(--danger)">${esc(f.flag)}</div>`:''}
+   <div class="tf"><label>Name<input data-tf="name" value="${esc(f.name)}" placeholder="Summer, Agadir…"></label>
+   <div class="two"><label>From<input type="date" data-tf="start" value="${f.start}"></label><label>To<input type="date" data-tf="end" value="${f.end}"></label></div></div>
+   <div class="lbl">Flights</div>
+   ${f.flights.map((x,i)=>`<div class="frow">
+      <input type="date" data-ff="${i}:date" value="${x.date}" aria-label="Flight date"><input type="time" data-ff="${i}:time" value="${x.time}" aria-label="Departure time">
+      <input data-ff="${i}:route" value="${esc(x.route)}" placeholder="AMS–TNG" aria-label="Route"><input data-ff="${i}:airline" value="${esc(x.airline)}" placeholder="Airline" aria-label="Airline">
+      <input data-ff="${i}:cost" inputmode="decimal" value="${x.cost==null||isNaN(x.cost)?'':String(x.cost).replace('.',',')}" placeholder="€" aria-label="Price" style="grid-column:1/3">
+      <button class="x" data-delflight="${i}" aria-label="Remove flight">×</button></div>`).join('')}
+   <button class="btn addrow" data-act="addflight">Add flight</button>
+   <div class="lbl">Other costs</div>
+   ${f.costs.map((c,i)=>`<div class="crow"><input data-cf="${i}:label" value="${esc(c.label)}" placeholder="Bus, luggage…" aria-label="Cost description"><input data-cf="${i}:amount" inputmode="decimal" value="${c.amount==null||isNaN(c.amount)?'':String(c.amount).replace('.',',')}" placeholder="€" aria-label="Amount"><button class="x" data-delcost="${i}" aria-label="Remove cost">×</button></div>`).join('')}
+   <button class="btn addrow" data-act="addcost">Add cost</button>
+   <div class="tf"><label>Note<input data-tf="note" value="${esc(f.note)}"></label></div>
+   <div class="tripsum"><span>Total</span><span class="num" id="tdtotal">${eur(tripTotal(f))}</span></div>
+   <div class="actions">${f.isNew?'':'<button class="btn danger" data-act="deltrip">Delete</button>'}<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="savetrip">Save trip</button></div>`,!focus);
+}
+document.addEventListener('input',ev=>{
+  const el=ev.target;if(!td)return;
+  if(el.dataset.tf){td[el.dataset.tf]=el.value}
+  else if(el.dataset.ff){const[i,k]=el.dataset.ff.split(':');td.flights[+i][k]=k==='cost'?money(el.value):el.value}
+  else if(el.dataset.cf){const[i,k]=el.dataset.cf.split(':');td.costs[+i][k]=k==='amount'?money(el.value):el.value}
+  else return;
+  const t=$('#tdtotal');if(t)t.textContent=eur(tripTotal({flights:td.flights.map(f=>({cost:isNaN(f.cost)?0:f.cost})),costs:td.costs.map(c=>({amount:isNaN(c.amount)?0:c.amount}))}));
+});
 
 /* ---------- settings ---------- */
 function renderSettings(){
@@ -509,6 +618,10 @@ document.addEventListener('click',ev=>{
   const t=ev.target.closest('button,[data-act]');if(!t)return;
   if(t.dataset.tab){if(t.dataset.tab!=='month')setRangeSilently();show(t.dataset.tab);return}
   if(t.dataset.day){onDay(t.dataset.day);return}
+  if(t.dataset.trip){openTrip(t.dataset.trip);return}
+  if(t.dataset.tyear){tYear=+t.dataset.tyear;renderTrips();return}
+  if(t.dataset.delflight){td.flights.splice(+t.dataset.delflight,1);drawTrip();return}
+  if(t.dataset.delcost){td.costs.splice(+t.dataset.delcost,1);drawTrip();return}
   if(t.dataset.week){const d=parse(t.dataset.week);const th=addDays(d,3);mCur=new Date(th.getFullYear(),th.getMonth(),1);show('month');return}
   if(t.dataset.type){draft.type=t.dataset.type;document.querySelectorAll('#tchips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.type===draft.type));return}
   if(t.dataset.amt){draft.amt=+t.dataset.amt;$('#amtCustom').value='';document.querySelectorAll('#achips .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.amt===draft.amt));return}
@@ -526,6 +639,18 @@ document.addEventListener('click',ev=>{
     case 'yprev':yCur--;renderYear();break;
     case 'ynext':yCur++;renderYear();break;
     case 'export':exportData();break;
+    case 'addtrip':openTrip(null);break;
+    case 'addflight':{const last=td.flights[td.flights.length-1];td.flights.push({date:last?td.end:td.start,time:'',route:'',airline:'',cost:null});drawTrip();break}
+    case 'addcost':td.costs.push({label:'',amount:null});drawTrip();break;
+    case 'deltrip':if(confirm(`Delete trip "${td.name}"?`)){S.trips=S.trips.filter(x=>x.id!==td.id);save();closeSheet();render();toast('Trip deleted')}break;
+    case 'savetrip':{
+      if(!td.start||!td.end){toast('Fill in both dates');return}
+      if([...td.flights.map(f=>f.cost),...td.costs.map(c=>c.amount)].some(v=>v!=null&&isNaN(v))){toast('Write prices like 89,95');return}
+      if(td.end<td.start)[td.start,td.end]=[td.end,td.start];
+      td.name=td.name.trim()||'Trip';const isNew=td.isNew;delete td.isNew;
+      td.flights.sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1);
+      S.trips=S.trips.filter(x=>x.id!==td.id);S.trips.push(td);tYear=+td.start.slice(0,4);
+      save();closeSheet();render();toast(isNew?'Trip added':'Trip saved');break}
     case 'reset':if(confirm('Delete all leave data on this phone? Export a backup first if you want to keep it.')){localStorage.removeItem(KEY);S=null;show('welcome')}break;
     case 'saveday':{
       if(!draft.type){toast('Pick Verlof, ADV or TVT');return}

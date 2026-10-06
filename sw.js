@@ -1,5 +1,5 @@
 // Verlof-Tracker service worker
-const CACHE='verlof-tracker-v2';
+const CACHE='verlof-tracker-v3';
 const SHELL=['./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 self.addEventListener('install',e=>{
   // never fail the install because one file hiccups
