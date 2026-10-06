@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#18212B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Verlof">
+<title>Verlof-Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F7; --surface:#FFFFFF; --ink:#18212B; --muted:#66717D; --line:#D5DBE1; --soft:#E8ECF0;
+  --verlof:#1F9D55; --adv:#8DC63F; --tvt:#4A8FD6; --holiday:#F0A868; --weekend:#ECE6C6;
+  --danger:#C23B3B; --ok:#1F9D55;
+  --body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --num:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --r-sm:6px; --r-md:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161B21; --surface:#1F262E; --ink:#E9EDF1; --muted:#9AA5B1; --line:#334049; --soft:#28313A; --weekend:#3A3826;}
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent;
+  padding-top:env(safe-area-inset-top,0px)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--tvt);outline-offset:2px}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+
+header.top{display:flex;align-items:baseline;justify-content:space-between;padding:14px 18px 6px}
+header.top h1{font-family:var(--num);font-weight:700;font-size:22px;margin:0;letter-spacing:.2px}
+header.top .wk{font-family:var(--num);font-size:18px;color:var(--muted)}
+main{padding:6px 14px calc(96px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto}
+section.view{display:none}
+section.view.on{display:block}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs button{flex:1;background:none;border:0;padding:10px 0 12px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.tabs button[aria-current="page"]{color:var(--ink);font-weight:600}
+nav.tabs svg{width:22px;height:22px}
+
+/* balance readouts */
+.balance{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px 14px;margin-bottom:10px;position:relative;overflow:hidden}
+.balance::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.balance .row1{display:flex;justify-content:space-between;align-items:baseline}
+.balance h2{margin:0;font-size:17px;font-weight:600}
+.balance .days{color:var(--muted);font-size:15px}
+.balance .big{font-family:var(--num);font-weight:700;font-size:52px;line-height:1;margin:6px 0 10px;font-variant-numeric:tabular-nums}
+.balance .big.neg{color:var(--danger)}
+.balance .big small{font-size:18px;font-weight:600;color:var(--muted);margin-left:6px}
+.bar{display:flex;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .t{background:var(--c)}
+.bar .p{background:repeating-linear-gradient(135deg,var(--c) 0 3px,transparent 3px 6px);opacity:.9}
+.legend3{display:flex;gap:14px;margin-top:8px;font-size:14px;color:var(--muted)}
+.legend3 b{color:var(--ink);font-weight:600}
+.balance.empty .big{font-size:22px;font-family:var(--body);font-weight:500;color:var(--muted)}
+
+.strip{display:flex;gap:10px;margin:4px 0 12px}
+.strip > div{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px}
+.strip .lab{font-size:13px;color:var(--muted)}
+.strip .val{font-family:var(--num);font-size:22px;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);padding:11px 14px;font-weight:600}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.block{width:100%}
+.btn.danger{color:var(--danger)}
+.note{font-size:14px;color:var(--muted);margin:6px 2px 14px}
+.check-line{font-size:14px;color:var(--muted);margin:2px 2px 14px}
+.check-line.warn{color:var(--danger)}
+
+/* month calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin:2px 0 10px}
+.calhead h2{margin:0;font-family:var(--num);font-size:26px;font-weight:700}
+.iconbtn{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);width:40px;height:40px;display:grid;place-items:center}
+.iconbtn svg{width:18px;height:18px}
+.month{display:grid;grid-template-columns:30px repeat(7,1fr);gap:4px}
+.month .h{font-size:12px;color:var(--muted);text-align:center;padding-bottom:2px}
+.month .wn{font-family:var(--num);font-size:14px;color:var(--muted);display:grid;place-items:center}
+.day{aspect-ratio:1/1.08;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);position:relative;padding:4px 5px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.day .d{font-family:var(--num);font-size:17px;font-weight:600;line-height:1;position:relative;z-index:1}
+.day .t{font-size:10.5px;font-weight:600;line-height:1.1;position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day.out{visibility:hidden}
+.day.we{background:var(--weekend);border-color:transparent}
+.day.hol{background:var(--holiday);border-color:transparent;color:#2A1A0A}
+.day.pre{opacity:.35}
+.day.today{outline:2px solid var(--ink);outline-offset:1px}
+.day .fill{position:absolute;left:0;right:0;bottom:0;z-index:0}
+.day.has{color:#fff;border-color:transparent}
+.day.has.adv{color:#1B2A0B}
+.day.sel{outline:3px solid var(--tvt);outline-offset:1px}
+.modebar{display:flex;gap:8px;margin:12px 0 8px}
+.modebar .btn{flex:1;padding:9px 10px;font-size:15px}
+.modebar .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin:10px 2px}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* year view */
+.ystats{display:flex;gap:8px;margin-bottom:10px}
+.ystats > div{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;border-top:4px solid var(--c)}
+.ystats .lab{font-size:13px;color:var(--muted)}
+.ystats .val{font-family:var(--num);font-size:22px;font-weight:700}
+.weeks{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:6px 8px}
+.wrow{display:grid;grid-template-columns:34px repeat(7,1fr) 44px;gap:3px;align-items:center;padding:2px 0;border:0;background:none;width:100%}
+.wrow.hdr{font-size:11px;color:var(--muted);text-align:center;position:sticky;top:0;background:var(--surface)}
+.wrow .wn{font-family:var(--num);font-size:14px;color:var(--muted);text-align:left;padding-left:2px}
+.wrow .c{height:16px;border-radius:3px;background:var(--soft)}
+.wrow .c.we{background:var(--weekend)}
+.wrow .c.hol{background:var(--holiday)}
+.wrow .c.pre,.wrow .c.out{background:transparent}
+.wrow .mo{font-size:11px;color:var(--muted);text-align:right}
+.wrow.cur .wn{color:var(--ink);font-weight:700}
+.wrow.cur{outline:2px solid var(--ink);outline-offset:1px;border-radius:4px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,14,18,.45);display:none;z-index:10}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-radius:16px 16px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom,0px));z-index:11;
+  transform:translateY(105%);visibility:hidden;transition:transform .22s ease,visibility 0s .22s;max-width:560px;margin:0 auto;max-height:88vh;overflow:auto}
+.sheet.on{transform:none;visibility:visible;transition:transform .22s ease}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}}
+.sheet h3{margin:0 0 2px;font-family:var(--num);font-size:24px}
+.sheet .sub{color:var(--muted);font-size:14px;margin-bottom:12px}
+.lbl{font-size:13px;color:var(--muted);margin:12px 0 6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 14px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.existing{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.existing .n{display:flex;align-items:center;gap:8px;font-weight:600}
+.existing .n i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.existing button{background:none;border:0;color:var(--danger);font-weight:600;padding:6px}
+.actions{display:flex;gap:10px;margin-top:16px}
+.actions .btn{flex:1}
+.hm{width:92px;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);font-family:var(--num);font-size:20px;text-align:center}
+.bcsrow{display:grid;grid-template-columns:1fr 100px 86px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.bcsrow .app{font-family:var(--num);font-size:16px;color:var(--muted);text-align:right}
+.bcsrow .app.bad{color:var(--danger)}
+.bcsrow .app.good{color:var(--ok)}
+
+/* settings */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:17px}
+.field{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);gap:12px}
+.field:last-child{border-bottom:0}
+.field input[type=number]{width:90px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);text-align:right}
+.hist{font-size:14px}
+.hist div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.on{opacity:1}
+.welcome{text-align:left;padding:18px 4px}
+.welcome h2{font-family:var(--num);font-size:30px;margin:0 0 6px}
+.welcome p{color:var(--muted);margin:0 0 18px}
+.welcome .btn{margin-bottom:10px}
+</style>
+</head>
+<body>
+<header class="top"><h1>Verlof-Tracker</h1><span class="wk num" id="wk"></span></header>
+
+<main>
+  <section class="view" id="v-welcome">
+    <div class="welcome">
+      <h2>Load your leave history</h2>
+      <p>Import the leave-history.json backup to bring in 2023–2026 and today's BCS saldi. You can also start empty and enter a BCS check yourself.</p>
+      <button class="btn primary block" data-act="import">Import backup file</button>
+      <button class="btn block" data-act="start-empty">Start empty</button>
+    </div>
+  </section>
+
+  <section class="view" id="v-home">
+    <div id="cards"></div>
+    <div class="check-line" id="checkline"></div>
+    <div class="strip">
+      <div><div class="lab">Next leave</div><div class="val" id="nextleave">–</div><div class="lab" id="nextleave2"></div></div>
+      <div><div class="lab">Weeks left in <span id="yr1"></span></div><div class="val" id="weeksleft">–</div></div>
+    </div>
+    <button class="btn primary block" data-act="bcs">Check against BCS</button>
+  </section>
+
+  <section class="view" id="v-month">
+    <div class="calhead">
+      <button class="iconbtn" data-act="mprev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="mtitle"></h2>
+      <button class="iconbtn" data-act="mnext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="month" id="month"></div>
+    <div class="modebar">
+      <button class="btn" id="rangeBtn" aria-pressed="false" data-act="range">Select a range</button>
+      <button class="btn" data-act="mtoday">Today</button>
+    </div>
+    <div class="note" id="rangehint" hidden>Tap the first day, then the last day.</div>
+    <div class="key">
+      <span><i style="background:var(--verlof)"></i>Verlof</span>
+      <span><i style="background:var(--adv)"></i>ADV</span>
+      <span><i style="background:var(--tvt)"></i>TVT</span>
+      <span><i style="background:var(--holiday)"></i>Holiday</span>
+      <span><i style="background:var(--weekend)"></i>Weekend</span>
+    </div>
+  </section>
+
+  <section class="view" id="v-year">
+    <div class="calhead">
+      <button class="iconbtn" data-act="yprev" aria-label="Previous year"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="ytitle"></h2>
+      <button class="iconbtn" data-act="ynext" aria-label="Next year"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="ystats" id="ystats"></div>
+    <div class="weeks" id="weeks"></div>
+  </section>
+
+  <section class="view" id="v-settings">
+    <div class="card">
+      <h2>Yearly hours from BCS</h2>
+      <div class="note" style="margin-top:0">Added to your balance on 1 January. Change them when your CAO changes.</div>
+      <div id="allowances"></div>
+    </div>
+    <div class="card">
+      <h2>BCS checks</h2>
+      <div class="hist" id="bcshist"></div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <div class="note" style="margin-top:0">Your data is stored on this phone only. Export a backup now and then and keep it outside the public repo.</div>
+      <div class="actions" style="margin-top:4px">
+        <button class="btn" data-act="export">Export backup</button>
+        <button class="btn" data-act="import">Import backup</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Reset</h2>
+      <button class="btn danger block" data-act="reset">Delete all data on this phone</button>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sections">
+  <button data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="13" width="4" height="7"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>Balance</button>
+  <button data-tab="month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Month</button>
+  <button data-tab="year"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 9h16M4 13h16M4 17h16M4 21h16"/></svg>Year</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+const KEY='verlof-tracker-v1';
+const TYPES={verlof:{name:'Verlof',c:'var(--verlof)'},adv:{name:'ADV',c:'var(--adv)'},tvt:{name:'TVT',c:'var(--tvt)'}};
+const TKEYS=['verlof','adv','tvt'];
+const MDAY=480;
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MSHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DSHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const todayStr=()=>ymd(new Date());
+const dow=d=>(d.getDay()+6)%7; // Mon=0
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
+function isoWeeksInYear(y){return isoWeek(new Date(y,11,28))}
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+const holCache={};
+function holidays(y){
+  if(holCache[y])return holCache[y];
+  const e=easter(y);let kd=new Date(y,3,27);if(kd.getDay()===0)kd=new Date(y,3,26);
+  const h={};
+  h[`${y}-01-01`]='New Year';h[ymd(addDays(e,1))]='Easter Monday';h[ymd(kd)]="King's Day";
+  h[ymd(addDays(e,39))]='Ascension';h[ymd(addDays(e,50))]='Whit Monday';
+  h[`${y}-12-25`]='Christmas';h[`${y}-12-26`]='Boxing Day';
+  return holCache[y]=h;
+}
+const holidayName=s=>holidays(+s.slice(0,4))[s]||null;
+const isWeekend=s=>dow(parse(s))>=5;
+const isWorkday=s=>!isWeekend(s)&&!holidayName(s);
+
+/* ---------- time format ---------- */
+const hm=m=>{const neg=m<0;m=Math.abs(Math.round(m));return (neg?'−':'')+Math.floor(m/60)+':'+pad(m%60)};
+const days=m=>{const d=Math.round(m/MDAY*100)/100;return (d===1?'1 day':d+' days').replace('-','−')};
+function parseHM(s){s=String(s).trim().replace(',','.');if(!s)return null;
+  if(s.includes(':')){const[h,mm]=s.split(':');if(!/^\d+$/.test(h)||!/^\d{1,2}$/.test(mm||'0'))return null;return(+h)*60+(+mm||0)}
+  const n=Number(s);return isNaN(n)?null:Math.round(n*60)}
+
+/* ---------- state ---------- */
+let S=load();
+function blank(){return{schemaVersion:1,settings:{minutesPerDay:MDAY,employmentStart:'2023-02-01',defaultAllowanceMinutes:{verlof:216*60,adv:104*60}},years:{},bcsChecks:[],entries:[]}}
+function load(){try{const r=localStorage.getItem(KEY);return r?normalize(JSON.parse(r)):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this phone')}}
+function uid(){return Math.random().toString(36).slice(2,10)}
+function totals(entries){const t={verlof:0,adv:0,tvt:0};entries.forEach(e=>{if(t[e.type]!=null)t[e.type]+=e.minutes});return t}
+function normalize(d){
+  const b=blank();
+  const out={...b,...d,settings:{...b.settings,...(d.settings||{})}};
+  out.settings.defaultAllowanceMinutes={...b.settings.defaultAllowanceMinutes,...(d.settings&&d.settings.defaultAllowanceMinutes||{})};
+  out.entries=(d.entries||[]).filter(e=>TYPES[e.type]&&/^\d{4}-\d\d-\d\d$/.test(e.date)).map(e=>({id:e.id||uid(),date:e.date,type:e.type,minutes:+e.minutes||MDAY,label:e.label||'',createdAt:e.createdAt||null}));
+  const tot=totals(out.entries);
+  out.bcsChecks=(d.bcsChecks||[]).map(c=>({date:c.date,savedAt:c.savedAt||c.date+'T12:00:00',minutes:{verlof:0,adv:0,tvt:0,...c.minutes},bookedAtCheck:c.bookedAtCheck||{...tot},note:c.note||''}));
+  out.years=d.years||{};
+  return out;
+}
+function allowance(y,t){const yr=S.years[y];if(yr&&yr.allowanceMinutes&&yr.allowanceMinutes[t]!=null)return yr.allowanceMinutes[t];return S.settings.defaultAllowanceMinutes[t]||0}
+function anchor(){return S.bcsChecks.slice().sort((a,b)=>a.savedAt<b.savedAt?-1:1).pop()||null}
+function balances(){
+  const a=anchor();if(!a)return null;
+  const tot=totals(S.entries);const ty=new Date().getFullYear();const ay=+a.date.slice(0,4);
+  const r={};
+  TKEYS.forEach(t=>{let add=0;for(let y=ay+1;y<=ty;y++){if(t!=='tvt')add+=allowance(y,t)}
+    r[t]=a.minutes[t]+add-(tot[t]-(a.bookedAtCheck[t]||0))});
+  return r;
+}
+function yearSplit(y){const today=todayStr();const r={};TKEYS.forEach(t=>r[t]={taken:0,planned:0});
+  S.entries.forEach(e=>{if(+e.date.slice(0,4)!==y)return;r[e.type][e.date<=today?'taken':'planned']+=e.minutes});return r}
+const entriesOn=s=>S.entries.filter(e=>e.date===s);
+
+/* ---------- ui helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}
+let tab='home';
+function show(name){
+  tab=name;
+  document.querySelectorAll('section.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+name));
+  document.querySelectorAll('nav.tabs button').forEach(b=>{if(b.dataset.tab===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  $('nav.tabs').style.display=name==='welcome'?'none':'flex';
+  render();
+}
+function render(){
+  const now=new Date();$('#wk').textContent='W'+isoWeek(now);
+  if(!S){return}
+  if(tab==='home')renderHome();
+  if(tab==='month')renderMonth();
+  if(tab==='year')renderYear();
+  if(tab==='settings')renderSettings();
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const b=balances();const y=new Date().getFullYear();const sp=yearSplit(y);
+  $('#cards').innerHTML=TKEYS.map(t=>{
+    const T=TYPES[t];const tk=sp[t].taken,pl=sp[t].planned;
+    if(!b)return `<div class="balance empty" style="--c:${T.c}"><div class="row1"><h2>${T.name}</h2></div><div class="big">Add a BCS check to see this balance</div></div>`;
+    const free=b[t];const whole=Math.max(tk+pl+Math.max(free,0),1);
+    return `<div class="balance" style="--c:${T.c}">
+      <div class="row1"><h2>${T.name}</h2><span class="days">${days(free)} free</span></div>
+      <div class="big ${free<0?'neg':''}">${hm(free)}<small>h</small></div>
+      <div class="bar" aria-hidden="true"><i class="t" style="width:${tk/whole*100}%"></i><i class="p" style="width:${pl/whole*100}%"></i></div>
+      <div class="legend3"><span>Taken <b>${days(tk).replace(' days','d').replace(' day','d')}</b></span><span>Planned <b>${days(pl).replace(' days','d').replace(' day','d')}</b></span><span>in ${y}</span></div>
+    </div>`}).join('');
+  const a=anchor();
+  $('#checkline').textContent=a?`Last BCS check ${fmtDate(a.date)}. Balances include everything you planned since.`:'No BCS check yet.';
+  // next leave
+  const today=todayStr();const fut=[...new Set(S.entries.filter(e=>e.date>today).map(e=>e.date))].sort();
+  if(fut.length){const first=fut[0];let n=0,d=parse(first);const set=new Set(S.entries.map(e=>e.date));
+    while(true){const s=ymd(d);if(set.has(s)){n+=entriesOn(s).reduce((x,e)=>x+e.minutes,0)/MDAY}else if(isWorkday(s))break;d=addDays(d,1);if(n>60)break}
+    const inDays=Math.round((parse(first)-parse(today))/864e5);
+    $('#nextleave').textContent=inDays===1?'Tomorrow':`In ${inDays} days`;
+    $('#nextleave2').textContent=`${fmtDate(first)}, ${days(n*MDAY)}`;
+  }else{$('#nextleave').textContent='None planned';$('#nextleave2').textContent=''}
+  $('#yr1').textContent=y;$('#weeksleft').textContent=Math.max(isoWeeksInYear(y)-isoWeek(new Date()),0);
+}
+function fmtDate(s){const d=parse(s);return `${DSHORT[dow(d)]} ${d.getDate()} ${MSHORT[d.getMonth()]}${d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():''}`}
+
+/* ---------- month ---------- */
+let mCur=new Date();mCur=new Date(mCur.getFullYear(),mCur.getMonth(),1);
+let rangeMode=false,rangeStart=null;
+function dayClass(s,inMonth){
+  const c=['day'];if(!inMonth)c.push('out');
+  if(s<S.settings.employmentStart)c.push('pre');
+  if(isWeekend(s))c.push('we');else if(holidayName(s))c.push('hol');
+  if(s===todayStr())c.push('today');
+  return c;
+}
+function renderMonth(){
+  $('#mtitle').textContent=`${MONTHS[mCur.getMonth()]} ${mCur.getFullYear()}`;
+  let h='<div class="h"></div>'+DSHORT.map(d=>`<div class="h">${d}</div>`).join('');
+  let d=addDays(mCur,-dow(mCur));const last=new Date(mCur.getFullYear(),mCur.getMonth()+1,0);
+  while(d<=last||dow(d)!==0){
+    if(dow(d)===0)h+=`<div class="wn">${isoWeek(d)}</div>`;
+    const s=ymd(d);const inM=d.getMonth()===mCur.getMonth();const cls=dayClass(s,inM);
+    const es=entriesOn(s);let fill='',lab='';
+    if(es.length&&!isWeekend(s)){cls.push('has');
+      if(es.length===1&&es[0].minutes>=MDAY){cls.push(es[0].type);fill=`<span class="fill" style="top:0;background:${TYPES[es[0].type].c}"></span>`;lab=''}
+      else{let top=0;const sum=es.reduce((x,e)=>x+e.minutes,0);
+        fill=es.map(e=>{const hgt=e.minutes/Math.max(MDAY,sum)*100;const f=`<span class="fill" style="top:${100-top-hgt}%;bottom:${top}%;background:${TYPES[e.type].c}"></span>`;top+=hgt;return f}).join('');
+        if(sum<MDAY){cls.splice(cls.indexOf('has'),1)}
+        lab=es.map(e=>TYPES[e.type].name[0]+hm(e.minutes).replace(':00','')).join(' ')}
+    }
+    if(rangeStart===s)cls.push('sel');
+    h+=`<button class="${cls.join(' ')}" data-day="${s}" ${inM?'':'tabindex="-1" aria-hidden="true"'} aria-label="${fmtDate(s)}${es.length?', '+es.map(e=>TYPES[e.type].name+' '+hm(e.minutes)).join(', '):''}${holidayName(s)?', '+holidayName(s):''}">${fill}<span class="d">${d.getDate()}</span><span class="t">${esc(lab)}</span></button>`;
+    d=addDays(d,1);
+    if(d>last&&dow(d)===0)break;
+  }
+  $('#month').innerHTML=h;
+}
+function onDay(s){
+  if(s<S.settings.employmentStart){toast('Before your start date');return}
+  if(rangeMode){
+    if(!rangeStart){rangeStart=s;renderMonth();return}
+    let a=rangeStart,b=s;if(b<a)[a,b]=[b,a];rangeStart=null;setRange(false);openRange(a,b);return}
+  if(isWeekend(s)){toast('Weekends never count');return}
+  openDay(s);
+}
+function setRange(on){rangeMode=on;rangeStart=null;$('#rangeBtn').setAttribute('aria-pressed',on);$('#rangehint').hidden=!on;renderMonth()}
+
+/* ---------- year ---------- */
+let yCur=new Date().getFullYear();
+function renderYear(){
+  $('#ytitle').textContent=yCur;
+  const sp=yearSplit(yCur);
+  $('#ystats').innerHTML=TKEYS.map(t=>`<div style="--c:${TYPES[t].c}"><div class="lab">${TYPES[t].name}</div><div class="val">${Math.round((sp[t].taken+sp[t].planned)/MDAY*100)/100}</div><div class="lab">days</div></div>`).join('');
+  const n=isoWeeksInYear(yCur);let d=new Date(yCur,0,4);d=addDays(d,-dow(d));
+  const curW=yCur===new Date().getFullYear()?isoWeek(new Date()):-1;
+  let h=`<div class="wrow hdr"><span>W</span>${DSHORT.map(x=>`<span>${x[0]}</span>`).join('')}<span></span></div>`;
+  for(let w=1;w<=n;w++){
+    let cells='';let lastMonth='';
+    for(let i=0;i<7;i++){const s=ymd(addDays(d,i));const es=entriesOn(s);let cls='c';let st='';
+      if(s<S.settings.employmentStart)cls+=' pre';else if(isWeekend(s))cls+=' we';else if(holidayName(s))cls+=' hol';
+      if(es.length&&!isWeekend(s)){const sum=es.reduce((x,e)=>x+e.minutes,0);
+        if(es.length===1)st=`background:${sum>=MDAY?TYPES[es[0].type].c:`linear-gradient(to top,${TYPES[es[0].type].c} 50%,var(--soft) 50%)`}`;
+        else st=`background:linear-gradient(to top,${TYPES[es[0].type].c} 50%,${TYPES[es[1].type].c} 50%)`}
+      cells+=`<span class="${cls}" style="${st}"></span>`;if(i===0)lastMonth=MSHORT[addDays(d,i).getMonth()]}
+    const mlab=(w===1||addDays(d,0).getDate()<=7)?lastMonth:'';
+    h+=`<button class="wrow${w===curW?' cur':''}" data-week="${ymd(d)}" aria-label="Week ${w}"><span class="wn">${w}</span>${cells}<span class="mo">${mlab}</span></button>`;
+    d=addDays(d,7);
+  }
+  $('#weeks').innerHTML=h;
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('on');$('#scrim').classList.add('on');const f=$('#sheet').querySelector('button,input');f&&f.focus({preventScroll:true})}
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on')}
+let draft={};
+function typeChips(sel){return TKEYS.map(t=>`<button class="chip" style="--c:${TYPES[t].c}" data-type="${t}" aria-pressed="${sel===t}"><i></i>${TYPES[t].name}</button>`).join('')}
+function amountChips(sel){return [[MDAY,'Full day 8:00'],[MDAY/2,'Half day 4:00']].map(([m,l])=>`<button class="chip" data-amt="${m}" aria-pressed="${sel===m}">${l}</button>`).join('')+`<input class="hm" id="amtCustom" inputmode="decimal" placeholder="h:mm" aria-label="Other amount" value="${sel!==MDAY&&sel!==MDAY/2&&sel?hm(sel):''}">`}
+function openDay(s){
+  const es=entriesOn(s);const used=es.reduce((x,e)=>x+e.minutes,0);
+  draft={mode:'day',date:s,type:es.length?null:'verlof',amt:Math.min(MDAY-used,MDAY)||MDAY/2};
+  if(es.length&&used<MDAY)draft.type=TKEYS.find(t=>!es.some(e=>e.type===t));
+  openSheet(`<h3>${fmtDate(s)}</h3><div class="sub">Week ${isoWeek(parse(s))}${holidayName(s)?', '+holidayName(s):''}</div>
+    ${es.map(e=>`<div class="existing"><span class="n" style="--c:${TYPES[e.type].c}"><i></i>${TYPES[e.type].name} ${hm(e.minutes)}</span><button data-del="${e.id}">Remove</button></div>`).join('')}
+    ${used<MDAY?`<div class="lbl">${es.length?'Add the rest of the day':'Mark this day as'}</div><div class="chips" id="tchips">${typeChips(draft.type)}</div>
+    <div class="lbl">Hours</div><div class="chips" id="achips">${amountChips(draft.amt)}</div>
+    <div class="actions"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="saveday">Save</button></div>`
+    :`<div class="actions"><button class="btn primary" data-act="close">Done</button></div>`}`);
+}
+function openRange(a,b){
+  const ds=[];for(let d=parse(a);ymd(d)<=b;d=addDays(d,1)){const s=ymd(d);if(isWorkday(s)&&s>=S.settings.employmentStart)ds.push(s)}
+  draft={mode:'range',dates:ds,type:'verlof',amt:MDAY};
+  const over=ds.filter(s=>entriesOn(s).length).length;
+  openSheet(`<h3>${fmtDate(a)} – ${fmtDate(b)}</h3><div class="sub">${ds.length} working ${ds.length===1?'day':'days'}. Weekends and holidays are skipped.${over?` ${over} already marked ${over===1?'day':'days'} will be replaced.`:''}</div>
+    ${ds.length?`<div class="lbl">Mark these days as</div><div class="chips" id="tchips">${typeChips('verlof')}</div>
+    <div class="actions"><button class="btn" data-act="clearrange">Clear these days</button><button class="btn primary" data-act="saverange">Save</button></div>`
+    :`<div class="actions"><button class="btn primary" data-act="close">Close</button></div>`}`);
+}
+function openBCS(){
+  const b=balances();
+  openSheet(`<h3>Check against BCS</h3><div class="sub">Type the saldi from BCS Verlofregistratie. The app compares them with its own balance and uses them from now on.</div>
+    <div class="bcsrow" style="font-size:13px;color:var(--muted)"><span></span><span>BCS</span><span style="text-align:right">App</span></div>
+    ${TKEYS.map(t=>`<div class="bcsrow"><span>${TYPES[t].name}</span><input class="hm" id="bcs-${t}" inputmode="decimal" placeholder="0:00" value="${b?hm(Math.max(b[t],0)):''}"><span class="app" id="cmp-${t}">${b?hm(b[t]):'–'}</span></div>`).join('')}
+    <div class="note" id="bcsmsg"></div>
+    <div class="actions"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="savebcs">Save check</button></div>`);
+  const upd=()=>{let diffs=0;TKEYS.forEach(t=>{const v=parseHM($('#bcs-'+t).value);const el=$('#cmp-'+t);if(!b||v==null){el.className='app';return}
+      const ok=v===b[t];el.className='app '+(ok?'good':'bad');if(!ok)diffs++});
+    $('#bcsmsg').textContent=!b?'':diffs?'A red value means BCS and the app disagree. Look for a day missing in one of them, or save to accept BCS as correct.':'Everything matches BCS.'};
+  TKEYS.forEach(t=>$('#bcs-'+t).addEventListener('input',upd));upd();
+}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+  const y=new Date().getFullYear();const ys=[y,y+1];
+  $('#allowances').innerHTML=ys.map(yy=>`<div class="field"><span>${yy}</span><span style="display:flex;gap:8px;align-items:center">
+     <label style="font-size:13px;color:var(--muted)">Verlof h <input type="number" min="0" step="1" data-allow="${yy}:verlof" value="${allowance(yy,'verlof')/60}"></label>
+     <label style="font-size:13px;color:var(--muted)">ADV h <input type="number" min="0" step="1" data-allow="${yy}:adv" value="${allowance(yy,'adv')/60}"></label></span></div>`).join('');
+  const cs=S.bcsChecks.slice().sort((a,b)=>a.savedAt<b.savedAt?1:-1);
+  $('#bcshist').innerHTML=cs.length?cs.map(c=>`<div><span>${fmtDate(c.date)}</span><span class="num">V ${hm(c.minutes.verlof)}  ADV ${hm(c.minutes.adv)}  TVT ${hm(c.minutes.tvt)}</span></div>`).join(''):'<div><span>No checks yet</span></div>';
+}
+
+/* ---------- actions ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify({...S,app:'Verlof-Tracker',exportedAt:new Date().toISOString()},null,1)],{type:'application/json'});
+  const name=`verlof-backup-${todayStr()}.json`;
+  const file=new File([blob],name,{type:'application/json'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:name}).catch(()=>{});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+$('#file').addEventListener('change',async ev=>{
+  const f=ev.target.files[0];ev.target.value='';if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!Array.isArray(d.entries))throw 0;
+    if(S&&S.entries.length&&!confirm(`Replace the data on this phone with ${f.name}?`))return;
+    S=normalize(d);save();toast(`Imported ${S.entries.length} entries`);show('home')}
+  catch(e){toast('That file is not a Verlof-Tracker backup')}
+});
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('button,[data-act]');if(!t)return;
+  if(t.dataset.tab){if(t.dataset.tab!=='month')setRangeSilently();show(t.dataset.tab);return}
+  if(t.dataset.day){onDay(t.dataset.day);return}
+  if(t.dataset.week){const d=parse(t.dataset.week);const th=addDays(d,3);mCur=new Date(th.getFullYear(),th.getMonth(),1);show('month');return}
+  if(t.dataset.type){draft.type=t.dataset.type;document.querySelectorAll('#tchips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.type===draft.type));return}
+  if(t.dataset.amt){draft.amt=+t.dataset.amt;$('#amtCustom').value='';document.querySelectorAll('#achips .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.amt===draft.amt));return}
+  if(t.dataset.del){S.entries=S.entries.filter(e=>e.id!==t.dataset.del);save();const s=draft.date;render();openDay(s);toast('Removed');return}
+  const act=t.dataset.act;if(!act)return;
+  switch(act){
+    case 'import':$('#file').click();break;
+    case 'start-empty':S=blank();save();show('home');break;
+    case 'bcs':openBCS();break;
+    case 'close':closeSheet();break;
+    case 'mprev':mCur=new Date(mCur.getFullYear(),mCur.getMonth()-1,1);renderMonth();break;
+    case 'mnext':mCur=new Date(mCur.getFullYear(),mCur.getMonth()+1,1);renderMonth();break;
+    case 'mtoday':{const n=new Date();mCur=new Date(n.getFullYear(),n.getMonth(),1);renderMonth();break}
+    case 'range':setRange(!rangeMode);break;
+    case 'yprev':yCur--;renderYear();break;
+    case 'ynext':yCur++;renderYear();break;
+    case 'export':exportData();break;
+    case 'reset':if(confirm('Delete all leave data on this phone? Export a backup first if you want to keep it.')){localStorage.removeItem(KEY);S=null;show('welcome')}break;
+    case 'saveday':{
+      if(!draft.type){toast('Pick Verlof, ADV or TVT');return}
+      const c=$('#amtCustom').value;let m=draft.amt;if(c){m=parseHM(c);if(m==null||m<=0){toast('Write hours as 4:30 or 4.5');return}}
+      const used=entriesOn(draft.date).reduce((x,e)=>x+e.minutes,0);
+      if(used+m>MDAY){toast(`Only ${hm(MDAY-used)} left on this day`);return}
+      const ex=S.entries.find(e=>e.date===draft.date&&e.type===draft.type);
+      if(ex)ex.minutes+=m;else S.entries.push({id:uid(),date:draft.date,type:draft.type,minutes:m,label:'',createdAt:new Date().toISOString()});
+      save();closeSheet();render();toast(`Saved ${TYPES[draft.type].name} ${hm(m)}`);break}
+    case 'saverange':{const set=new Set(draft.dates);S.entries=S.entries.filter(e=>!set.has(e.date));
+      const now=new Date().toISOString();draft.dates.forEach(s=>S.entries.push({id:uid(),date:s,type:draft.type,minutes:MDAY,label:'',createdAt:now}));
+      save();closeSheet();render();toast(`Saved ${draft.dates.length} ${draft.dates.length===1?'day':'days'} ${TYPES[draft.type].name}`);break}
+    case 'clearrange':{const set=new Set(draft.dates);const n=S.entries.length;S.entries=S.entries.filter(e=>!set.has(e.date));save();closeSheet();render();toast(n===S.entries.length?'Nothing to clear':'Cleared');break}
+    case 'savebcs':{const m={};for(const k of TKEYS){const v=parseHM($('#bcs-'+k).value||'0');if(v==null){toast('Write hours as 100:00');return}m[k]=v}
+      S.bcsChecks.push({date:todayStr(),savedAt:new Date().toISOString(),minutes:m,bookedAtCheck:totals(S.entries),note:''});
+      save();closeSheet();render();toast('BCS check saved');break}
+  }
+});
+function setRangeSilently(){rangeMode=false;rangeStart=null;const b=$('#rangeBtn');b.setAttribute('aria-pressed','false');$('#rangehint').hidden=true}
+document.addEventListener('change',ev=>{const el=ev.target;if(!el.dataset.allow)return;const[y,t]=el.dataset.allow.split(':');const v=Math.max(0,+el.value||0);
+  S.years[y]=S.years[y]||{};S.years[y].allowanceMinutes={...(S.years[y].allowanceMinutes||{}),[t]:v*60};save();toast(`${y} ${TYPES[t].name} set to ${v}h`)});
+$('#scrim').addEventListener('click',closeSheet);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+
+show(S?'home':'welcome');
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
