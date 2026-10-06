@@ -1,14 +1,17 @@
 {
+  "id": "./index.html",
   "name": "Verlof-Tracker",
   "short_name": "Verlof",
   "description": "Personal Verlof, ADV and TVT balance and calendar",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F3F5F7",
+  "orientation": "portrait",
+  "background_color": "#18212B",
   "theme_color": "#18212B",
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
